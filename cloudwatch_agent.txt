@@ -1,0 +1,115 @@
+{
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {
+            "file_path": "/opt/logs/apache/access.log",
+            "log_group_name": "/apache/access.log",
+            "log_stream_name": "{instance_id}",
+			"timestamp_format": "%d/%b/%Y:%H:%M:%S %z"
+          },
+          {
+            "file_path": "/opt/logs/apache/error.log",
+            "log_group_name": "/apache/error.log",
+            "log_stream_name": "{instance_id}",
+			"timestamp_format":"%a %b %d %H:%M:%S %Y"
+          },
+          {
+            "file_path": "/opt/logs/uep_push/gui_audit.log",
+            "log_group_name": "/push/gui_audit.log",
+            "log_stream_name": "{instance_id}",
+			"timestamp_format":"%Y-%m-%d %H:%M:%S"
+          },
+          {
+            "file_path": "/opt/logs/uep_push/localhost*.log",
+            "log_group_name": "/push/localhost.log",
+            "log_stream_name": "{instance_id}",
+			"timestamp_format":"%d-%b-%Y %H:%M:%S"
+          },
+		  {
+            "file_path": "/opt/logs/requestbuffer-receiver/localhost*.log",
+            "log_group_name": "/receiver/localhost.log",
+            "log_stream_name": "{instance_id}",
+			"timestamp_format":"%d-%b-%Y %H:%M:%S"
+          },
+		  {
+            "file_path": "/opt/logs/requestbuffer-sender/localhost*.log",
+            "log_group_name": "/sender/localhost.log",
+            "log_stream_name": "{instance_id}",
+			"timestamp_format":"%d-%b-%Y %H:%M:%S"
+          },
+          {
+            "file_path": "/opt/logs/uep_push/catalina*.log",
+            "log_group_name": "/push/catalina.log",
+            "log_stream_name": "{instance_id}",
+			"timestamp_format":"%d-%b-%Y %H:%M:%S"
+          },
+		  {
+            "file_path": "/opt/logs/requestbuffer-receiver/catalina*.log",
+            "log_group_name": "/receiver/catalina.log",
+            "log_stream_name": "{instance_id}",
+			"timestamp_format":"%d-%b-%Y %H:%M:%S"
+          },
+		  {
+            "file_path": "/opt/logs/requestbuffer-sender/catalina*.log",
+            "log_group_name": "/sender/catalina.log",
+            "log_stream_name": "{instance_id}",
+			"timestamp_format":"%d-%b-%Y %H:%M:%S"
+          },
+          {
+            "file_path": "/opt/logs/uep_push/ueppush.log",
+            "log_group_name": "/push/ueppush.log",
+            "log_stream_name": "{instance_id}",
+			"timestamp_format":"%Y-%m-%d %H:%M:%S"
+          },
+
+          {
+            "file_path": "/opt/logs/requestbuffer-receiver/requestbuffer_receiver.log",
+            "log_group_name": "/receiver/requestbuffer_receiver.log",
+            "log_stream_name": "{instance_id}",
+			"timestamp_format":"%Y-%m-%d %H:%M:%S"
+          },
+
+          {
+            "file_path": "/opt/logs/requestbuffer-sender/requestbuffer_sender.log",
+            "log_group_name": "/sender/requestbuffer_sender.log",
+            "log_stream_name": "{instance_id}",
+			"timestamp_format":"%Y-%m-%d %H:%M:%S"
+          }
+		  
+        ]
+      }
+    }
+  },
+  "metrics": {
+    "append_dimensions": {
+      "AutoScalingGroupName": "${aws:AutoScalingGroupName}",
+      "ImageId": "${aws:ImageId}",
+      "InstanceId": "${aws:InstanceId}",
+      "InstanceType": "${aws:InstanceType}"
+    },
+    "metrics_collected": {
+      "mem": {
+        "measurement": [
+          "mem_used_percent"
+        ],
+        "metrics_collection_interval": 60
+      },
+      "swap": {
+        "measurement": [
+          "swap_used_percent"
+        ],
+        "metrics_collection_interval": 60
+      }
+    }
+  }
+}
+[15/Jan/2019:00:00:18 +0000]%d/%b/%Y:%H:%M:%S %z access.log
+[Tue Jan 15 00:00:02.081630 2019]%a %b %d %H:%M:%S %Y error.log
+2019-01-15 00:05:54 %Y-%m-%d %H:%M:%S ueppush.log
+09-Jan-2019 07:50:56.069 %d-%b-%Y %H:%M:%S localhost.log
+2019-01-11 12:26:48 %Y-%m-%d %H:%M:%S gui_audit.log
+2019-01-15 10:45:33 %Y-%m-%d %H:%M:%S /opt/logs/requestbuffer-receiver/requestbuffer_receiver.log
+2019-01-16 05:05:19 %Y-%m-%d %H:%M:%S /opt/logs/requestbuffer-sender/requestbuffer_sender.log
+

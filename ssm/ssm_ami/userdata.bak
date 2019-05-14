@@ -1,0 +1,41 @@
+#!/bin/bash
+#exetend the log partition
+resize2fs /dev/xvdb
+#revert the nrpe config back to original one
+cp /etc/nagios/nrpe.cfg /etc/nagios/nrpe.cfg.bionic
+cp /etc/nagios/nrpe.cfg.dpkg-old /etc/nagios/nrpe.cfg
+systemctl restart nagios-nrpe-server.service
+#change timedatectl to ntpd
+timedatectl set-ntp no
+systemctl start ntp.service
+systemctl enable ntp.service
+#change /usr/lib/nagios/plugins/check_jvm's PATH
+#sed -i 's/export PATH.*/export PATH="\/usr\/local\/sbin:\/usr\/local\/bin:\/usr\/sbin:\/usr\/bin:\/sbin:\/bin:\/opt\/app\/java\/jdk1\.8\/bin"/' /usr/lib/nagios/plugins/check_jvm
+#guarantee the ownership & permission to startup script
+chmod +x /opt/app/scripts/*.sh
+chmod +x /opt/app/scripts/*.py
+#load enviroment
+. /opt/app/scripts/env_setup.sh
+#tomcat disabled modsecurity at apache 2.9.2
+if [ -e /etc/apache2/mods-enabled/security2.conf ]; then
+	sed -i 's/.*owasp-crs\.load.*/#&/' /etc/apache2/mods-enabled/security2.conf
+fi
+#change uep-application instance aws caller identity from iam user am to ec2 IAM role
+echo -e '[profile am]\nregion = us-east-1\ncredential_source = Ec2InstanceMetadata\noutput = json\n' > /root/.aws/config
+mv /root/.aws/credentials /root/.aws/credentials.bak
+users="ubuntu am dev"
+for user in $users; do
+	echo -e '[profile am]\nregion = us-east-1\ncredential_source = Ec2InstanceMetadata\noutput = json\n' > /home/$user/.aws/config
+	mv /home/$user/.aws/credentials /home/$user/.aws/credentials.bak
+done
+#update tomcat from s3 bucket s3:/am-operation/
+/usr/bin/python3 /usr/local/bin/aws s3 sync s3://am-operation/base/app/tomcat/ /opt/app/tomcat/
+tar xf /opt/app/tomcat/apache-tomcat-9.0.11.tar -C /opt/app/tomcat/
+chown -R ubuntu:ubuntu /opt/app/tomcat/apache-tomcat-9.0.11
+rm -f /opt/app/tomcat/tomcat8
+ln -s /opt/app/tomcat/apache-tomcat-9.0.11 /opt/app/tomcat/tomcat8
+#register the new internal ip in route 53 hosted zone of LAN
+/etc/init.d/aws_resources start
+sleep 10
+#start up the application from tag
+/opt/app/scripts/reload.sh autodeploy apache tomcat scripts

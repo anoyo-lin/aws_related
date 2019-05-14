@@ -1,0 +1,1 @@
+zip -r9 ../ssm_ami.zip .

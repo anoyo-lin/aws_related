@@ -1,0 +1,343 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "cdn_log ETL Lambda"
+Parameters:
+    AppList:
+        Type: String
+        Description: "app list for cloudformation"
+        Default: "redacted"
+    CdnList:
+        Type: String
+        Description: "'endpoint,user_name,app_name;endpoint2,user_name2,app_name2; ..."
+        Default: "redacted"
+    KeyPath:
+        Type: String
+        Description: "cdn server scp dsa scp key storage path of new created s3 bucket"
+        Default: "key/id_rsa_cdn_logs"
+    KeyBucket:
+        Type: String
+        Description: "bucket which store dsa key"
+    MailList:
+        Type: String
+        Description: "mail list,delimited by gma"
+        Default: "redacted"
+    SenderAddr:
+        Type: String
+        Description: "mail address that is behalf of sender"
+        Default: "redacted"
+Resources:
+    GenRep:
+        Type: AWS::Lambda::Function
+        DependsOn:
+            - LambdaCdnRole
+            - LambdaCdnPolicy
+        Properties:
+            Description: "generate statistics report daily"
+            FunctionName: "gen_athena_rep"
+            Handler: "gen_rep.lambda_handler"
+            MemorySize: 192
+            Environment:
+                Variables:
+                    RETENTION: "1"
+                    REGION_NAME: !Ref AWS::Region
+                    ATHENA_DB: "edgecast_logs"
+                    APP_LIST: !Ref AppList
+                    LOG_BUCKET:
+                        Fn::ImportValue: "CdnLogS3Path"
+                    MAIL_LIST: !Ref MailList
+                    SENDER_ADDR: !Ref SenderAddr
+            Role:
+                Fn::GetAtt:
+                    - "LambdaCdnRole"
+                    - "Arn"
+            Code:
+                S3Bucket:
+                    Fn::ImportValue: "CdnLogS3Path"
+                S3Key: "cdn_log.zip"
+            Runtime: "python3.6"
+            Timeout: 300
+    GenRepInvoke:
+        Type: AWS::Lambda::Permission
+        DependsOn:
+            - AmSix
+        Properties:
+            FunctionName:
+                Ref: "GenRep"
+            Action: "lambda:InvokeFunction"
+            Principal: "events.amazonaws.com"
+            SourceArn:
+                Fn::GetAtt:
+                    - "AmSix"
+                    - "Arn"
+    CdnTrans:
+        Type: AWS::Lambda::Function
+        DependsOn:
+            - LambdaCdnRole
+            - LambdaCdnPolicy
+        Properties:
+            Description: "get cdn log from on-premise server to S3"
+            FunctionName: "cdn_transfer"
+            Handler: "cdn_trans.lambda_handler"
+            MemorySize: 192
+            Environment:
+                Variables:
+                    DAY: "0"
+                    DAY_END: "3"
+                    THRESHOLD: "200"
+                    REGION_NAME: !Ref AWS::Region
+                    ATHENA_DB: "edgecast_logs"
+                    LOG_BUCKET:
+                        Fn::ImportValue: "CdnLogS3Path"
+                    KEY_BUCKET: !Ref KeyBucket
+                    KEY_PATH: !Ref KeyPath
+                    CDN_LIST: !Ref CdnList
+
+            Role:
+                Fn::GetAtt:
+                    - "LambdaCdnRole"
+                    - "Arn"
+            Code:
+                S3Bucket:
+                    Fn::ImportValue: "CdnLogS3Path"
+                S3Key: "cdn_log.zip"
+            Runtime: "python3.6"
+            Timeout: 300
+    CdnTransInvoke:
+        Type: AWS::Lambda::Permission
+        DependsOn:
+            - Per15Mins
+        Properties:
+            FunctionName:
+                Ref: "CdnTrans"
+            Action: "lambda:InvokeFunction"
+            Principal: "events.amazonaws.com"
+            SourceArn:
+                Fn::GetAtt:
+                    - "Per15Mins"
+                    - "Arn"
+    CdnClear:
+        Type: AWS::Lambda::Function
+        DependsOn:
+            - LambdaCdnRole
+            - LambdaCdnPolicy
+        Properties:
+            Description: "clean up the log before a whole year temprorarily"
+            FunctionName: "cdn_clear"
+            Handler: "cdn_clear.lambda_handler"
+            MemorySize: 192
+            Environment:
+                Variables:
+                    RETENTION: "365"
+                    REGION_NAME: !Ref AWS::Region
+                    START_DATE: "2017-08-01"
+                    APP_LIST: !Ref AppList
+                    LOG_BUCKET:
+                        Fn::ImportValue: "CdnLogS3Path"
+
+            Role:
+                Fn::GetAtt:
+                    - "LambdaCdnRole"
+                    - "Arn"
+            Code:
+                S3Bucket:
+                    Fn::ImportValue: "CdnLogS3Path"
+                S3Key: "cdn_log.zip"
+            Runtime: "python3.6"
+            Timeout: 300
+    CdnClearInvoke:
+        Type: AWS::Lambda::Permission
+        DependsOn:
+            - Per30Mins
+        Properties:
+            FunctionName:
+                Ref: "CdnClear"
+            Action: "lambda:InvokeFunction"
+            Principal: "events.amazonaws.com"
+            SourceArn:
+                Fn::GetAtt:
+                    - "Per30Mins"
+                    - "Arn"
+    ImeiClear:
+        Type: AWS::Lambda::Function
+        DependsOn:
+            - LambdaCdnRole
+            - LambdaCdnPolicy
+        Properties:
+            Description: "remove IMEI before 27 days complied in GDPR"
+            FunctionName: "imei_clear"
+            Handler: "imei_clear.lambda_handler"
+            MemorySize: 192
+            Environment:
+                Variables:
+                    THRESHOLD: "200"
+                    RETENTION: "27"
+                    REGION_NAME: !Ref AWS::Region
+                    APP_LIST: !Ref AppList
+                    LOG_BUCKET:
+                        Fn::ImportValue: "CdnLogS3Path"
+
+            Role:
+                Fn::GetAtt:
+                    - "LambdaCdnRole"
+                    - "Arn"
+            Code:
+                S3Bucket:
+                    Fn::ImportValue: "CdnLogS3Path"
+                S3Key: "cdn_log.zip"
+            Runtime: "python3.6"
+            Timeout: 300
+    ImeiClearInvoke:
+        Type: AWS::Lambda::Permission
+        DependsOn:
+            - Per30Mins
+        Properties:
+            FunctionName:
+                Ref: "ImeiClear"
+            Action: "lambda:InvokeFunction"
+            Principal: "events.amazonaws.com"
+            SourceArn:
+                Fn::GetAtt:
+                    - "Per30Mins"
+                    - "Arn"
+    Per15Mins:
+        Type: AWS::Events::Rule
+        DependsOn:
+            - CdnTrans
+        Properties:
+            Name: "Per15Mins"
+            Description: "per 15 mins"
+            ScheduleExpression: "rate(15 minutes)"
+            State: "ENABLED"
+            Targets:
+                - 
+                    Arn:
+                        Fn::GetAtt:
+                            - "CdnTrans"
+                            - "Arn"
+                    Id: "CdnLogTransfer"
+    Per30Mins:
+        Type: AWS::Events::Rule
+        DependsOn:
+            - ImeiClear
+            - CdnClear
+        Properties:
+            Name: "Per30Mins"
+            Description: "per 30 mins"
+            ScheduleExpression: "rate(30 minutes)"
+            State: "ENABLED"
+            Targets:
+                - 
+                    Arn:
+                        Fn::GetAtt:
+                            - "ImeiClear"
+                            - "Arn"
+                    Id: "ImeiClearUp"
+                - 
+                    Arn:
+                        Fn::GetAtt:
+                            - "CdnClear"
+                            - "Arn"
+                    Id: "CdnClearUp"
+    AmSix:
+        Type: AWS::Events::Rule
+        DependsOn:
+            - GenRep
+        Properties:
+            Name: "AmSix"
+            Description: "Per AM 6:00"
+            ScheduleExpression: "cron(0 6 * * ? *)"
+            State: "ENABLED"
+            Targets:
+                -
+                    Arn:
+                        Fn::GetAtt:
+                            - "GenRep"
+                            - "Arn"
+                    Id: "GenerateReport"
+    LambdaCdnPolicy:
+        Type: AWS::IAM::Policy
+        DependsOn:
+            - LambdaCdnRole
+        Properties:
+            PolicyName: LambdaCdnPolicy
+            Roles:
+                - Ref: LambdaCdnRole
+            PolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                    -
+                        Effect: "Allow"
+                        Resource: "*"
+                        Action:
+                            - "glue:BatchCreatePartition"
+                            - "glue:UpdateDatabase"
+                            - "glue:CreateTable"
+                            - "glue:DeleteDatabase"
+                            - "glue:GetTables"
+                            - "glue:GetPartitions"
+                            - "glue:BatchDeletePartition"
+                            - "glue:UpdateTable"
+                            - "glue:BatchGetPartition"
+                            - "glue:DeleteTable"
+                            - "glue:GetDatabases"
+                            - "glue:GetTable"
+                            - "glue:GetDatabase"
+                            - "glue:GetPartition"
+                            - "glue:CreateDatabase"
+                            - "glue:BatchDeleteTable"
+                            - "glue:CreatePartition"
+                            - "glue:DeletePartition"
+                            - "glue:UpdatePartition"
+                            - "athena:*"
+                            - "logs:CreateLogGroup"
+                            - "logs:CreateLogStream"
+                            - "logs:PutLogEvents"
+                            - "ses:SendEmail"
+                    -
+                        Action:
+                            - "s3:PutObject"
+                            - "s3:GetObject"
+                            - "s3:DeleteObject"
+                            - "s3:ListBucketMultipartUploads"
+                            - "s3:AbortMultipartUpload"
+                            - "s3:CreateBucket"
+                            - "s3:ListBucket"
+                            - "s3:GetBucketLocation"
+                            - "s3:ListMultipartUploadParts"
+                        Effect: "Allow"
+                        Resource:
+                            - Fn::Join:
+                                - ''
+                                - - "arn:aws:s3:::"
+                                  - Fn::ImportValue: "CdnLogS3Path"
+                            - Fn::Join:
+                                - ''
+                                - - "arn:aws:s3:::"
+                                  - Fn::ImportValue: "CdnLogS3Path"
+                                  - "/*"
+    LambdaCdnRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: "LambdaCdnRole"
+            AssumeRolePolicyDocument:
+                Version: "2012-10-17"
+                Statement:
+                    -
+                        Effect: "Allow"
+                        Principal:
+                            Service:
+                                - "ec2.amazonaws.com"
+                                - "lambda.amazonaws.com"
+                        Action:
+                            - "sts:AssumeRole"
+            Path: "/"
+    LambdaCdnInstanceProfile:
+        DependsOn:
+            - LambdaCdnRole
+        Type: AWS::IAM::InstanceProfile
+        Properties:
+            InstanceProfileName: "LambdaCdnInstanceProfile"
+            Path: "/"
+            Roles:
+                -
+                    Ref: "LambdaCdnRole"
+AWSTemplateFormatVersion: 2010-09-09

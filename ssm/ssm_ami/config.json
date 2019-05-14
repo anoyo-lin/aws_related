@@ -1,0 +1,318 @@
+{
+  "dev": {
+    "region": "us-east-1",
+    "profile": "dev",
+    "src_ami": "ami-redacted",
+    "subnet": "subnet-redacted",
+    "instance_key": "redacted",
+    "disk_info": [
+      {
+        "DeviceName": "/dev/sda1",
+        "Ebs": {
+          "VolumeSize": 8,
+          "VolumeType": "gp2",
+          "DeleteOnTermination": true
+        }
+      },
+      {
+        "DeviceName": "/dev/sdb",
+        "Ebs": {
+          "VolumeSize": 2,
+          "VolumeType": "standard",
+          "DeleteOnTermination": true
+        }
+      }
+    ],
+    "iam_profile": "redacted-application",
+    "sender": {
+      "asg_origin": {
+        "minimum": 1,
+        "maximum": 1,
+        "desired": 1
+      },
+      "asg_renew": {
+        "minimum": 2,
+        "maximum": 2,
+        "desired": 2
+      },
+      "instance_type": "t2.micro",
+      "sg": [
+        "sg-redacted"
+      ]
+    },
+    "receiver": {
+      "asg_origin": {
+        "minimum": 1,
+        "maximum": 2,
+        "desired": 1
+      },
+      "asg_renew": {
+        "minimum": 2,
+        "maximum": 2,
+        "desired": 2
+      },
+      "instance_type": "t2.micro",
+      "sg": [
+        "sg-redacted"
+      ]
+    },
+    "push": {
+      "asg_origin": {
+        "minimum": 1,
+        "maximum": 1,
+        "desired": 1
+      },
+      "asg_renew": {
+        "minimum": 2,
+        "maximum": 2,
+        "desired": 2
+      },
+      "instance_type": "t2.small",
+      "sg": [
+        "sg-redacted"
+      ]
+    },
+    "asg_names": [
+      "asg-redacted-redacted-push-systest",
+      "asg-redacted-redacted-sender",
+      "asg-redacted-redacted-receiver",
+      "asg-redacted-redacted-push"
+    ]
+  },
+  "stage": {
+    "region": "eu-west-1",
+    "profile": "stage",
+    "src_ami": "ami-redacted",
+    "subnet": "subnet-redacted",
+    "instance_key": "redacted",
+    "disk_info": [
+      {
+        "DeviceName": "/dev/sda1",
+        "Ebs": {
+          "VolumeSize": 8,
+          "VolumeType": "gp2",
+          "DeleteOnTermination": true
+        }
+      },
+      {
+        "DeviceName": "/dev/sdb",
+        "Ebs": {
+          "VolumeSize": 2,
+          "VolumeType": "standard",
+          "DeleteOnTermination": true
+        }
+      }
+    ],
+    "iam_profile": "redacted-application",
+    "sender": {
+      "asg_origin": {
+        "minimum": 1,
+        "maximum": 1,
+        "desired": 1
+      },
+      "asg_renew": {
+        "minimum": 2,
+        "maximum": 2,
+        "desired": 2
+      },
+      "instance_type": "t2.small",
+      "sg": [
+        "sg-redacted"
+      ]
+    },
+    "receiver": {
+      "asg_origin": {
+        "minimum": 2,
+        "maximum": 2,
+        "desired": 2
+      },
+      "asg_renew": {
+        "minimum": 4,
+        "maximum": 4,
+        "desired": 4
+      },
+      "instance_type": "t2.micro",
+      "sg": [
+        "sg-redacted"
+      ]
+    },
+    "push": {
+      "asg_origin": {
+        "minimum": 1,
+        "maximum": 1,
+        "desired": 1
+      },
+      "asg_renew": {
+        "minimum": 2,
+        "maximum": 2,
+        "desired": 2
+      },
+      "instance_type": "t2.small",
+      "sg": [
+        "sg-redacted"
+      ]
+    },
+    "asg_names": [
+      "asg-redacted-redacted-sender",
+      "asg-redacted-redacted-receiver",
+      "asg-redacted-redacted-push"
+    ]
+  },
+  "produs": {
+    "region": "us-west-2",
+    "profile": "produs",
+    "src_ami": "ami-redacted",
+    "subnet": "subnet-redacted",
+    "instance_key": "redacted",
+    "disk_info": [
+      {
+        "DeviceName": "/dev/sda1",
+        "Ebs": {
+          "VolumeSize": 10,
+          "VolumeType": "gp2",
+          "DeleteOnTermination": true
+        }
+      },
+      {
+        "DeviceName": "/dev/sdb",
+        "Ebs": {
+          "VolumeSize": 20,
+          "VolumeType": "standard",
+          "DeleteOnTermination": true
+        }
+      }
+    ],
+    "iam_profile": "redacted-application",
+    "sender": {
+      "asg_origin": {
+        "minimum": 1,
+        "maximum": 1,
+        "desired": 1
+      },
+      "asg_renew": {
+        "minimum": 2,
+        "maximum": 2,
+        "desired": 2
+      },
+      "instance_type": "m3.medium",
+      "sg": [
+        "sg-redacted"
+      ]
+    },
+    "receiver": {
+      "asg_origin": {
+        "minimum": 2,
+        "maximum": 12,
+        "desired": 2
+      },
+      "asg_renew": {
+        "minimum": 4,
+        "maximum": 12,
+        "desired": 4
+      },
+      "instance_type": "m3.medium",
+      "sg": [
+        "sg-redacted"
+      ]
+    },
+    "push": {
+      "asg_origin": {
+        "minimum": 1,
+        "maximum": 1,
+        "desired": 1
+      },
+      "asg_renew": {
+        "minimum": 2,
+        "maximum": 2,
+        "desired": 2
+      },
+      "instance_type": "m3.medium",
+      "sg": [
+        "sg-redacted"
+      ]
+    },
+    "asg_names": [
+      "asg-redacted-redacted-receiver",
+      "asg-redacted-redacted-sender"
+    ]
+  },
+  "prodeu": {
+    "region": "eu-west-1",
+    "profile": "prodeu",
+    "src_ami": "ami-redacted",
+    "subnet": "subnet-redacted",
+    "instance_key": "redacted",
+    "disk_info": [
+      {
+        "DeviceName": "/dev/sda1",
+        "Ebs": {
+          "VolumeSize": 10,
+          "VolumeType": "gp2",
+          "DeleteOnTermination": true
+        }
+      },
+      {
+        "DeviceName": "/dev/sdb",
+        "Ebs": {
+          "VolumeSize": 20,
+          "VolumeType": "standard",
+          "DeleteOnTermination": true
+        }
+      }
+    ],
+    "iam_profile": "redacted-application",
+    "sender": {
+      "asg_origin": {
+        "minimum": 1,
+        "maximum": 1,
+        "desired": 1
+      },
+      "asg_renew": {
+        "minimum": 2,
+        "maximum": 2,
+        "desired": 2
+      },
+      "instance_type": "m3.medium",
+      "sg": [
+        "sg-redacted"
+      ]
+    },
+    "receiver": {
+      "asg_origin": {
+        "minimum": 2,
+        "maximum": 10,
+        "desired": 3 
+      },
+      "asg_renew": {
+        "minimum": 6,
+        "maximum": 10,
+        "desired": 6 
+      },
+      "instance_type": "m3.medium",
+      "sg": [
+        "sg-redacted"
+      ]
+    },
+    "push": {
+      "asg_origin": {
+        "minimum": 1,
+        "maximum": 1,
+        "desired": 1
+      },
+      "asg_renew": {
+        "minimum": 2,
+        "maximum": 2,
+        "desired": 2
+      },
+      "instance_type": "m3.medium",
+      "sg": [
+        "sg-b45159d6"
+      ]
+    },
+    "asg_names": [
+      "asg-redacted-redacted-push",
+      "asg-redacted-redacted-receiver",
+      "asg-redacted-redacted-sender"
+    ]
+  }
+}

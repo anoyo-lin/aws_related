@@ -1,0 +1,11 @@
+#!/bin/bash
+resize2fs /dev/xvdb
+. /opt/app/scripts/env_setup.sh
+case $server_type in
+uep-app-* )
+    /opt/app/scripts/reload.sh autodeploy apache scripts tomcat;;
+uep-mongodb )
+    /opt/app/scripts/mongodb_reload.sh config;;
+* )
+    echo "user-data failed" > /tmp/user_data;;
+esac

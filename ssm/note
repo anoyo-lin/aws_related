@@ -1,0 +1,4 @@
+main env need to change
+ssmamirole the aws account id
+using automation need to install role and instance profile from cloudformation
+init_ssm need to change test to dedicate env

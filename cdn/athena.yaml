@@ -1,0 +1,436 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: edgecast_logs athena cfn
+Parameters:
+  TableList:
+    Description: "Comma-delimited list of app_name"
+    Type: CommaDelimitedList
+    Default: "redacted"
+  DbName:
+    Description: "athena database name"
+    Type: String
+    Default: "edgecast_logs"
+  PathSuffix:
+    Description: "log path directory suffix"
+    Type: String
+    Default: "_cdn_logs"
+
+Resources:
+  AthenaDb:
+    Type: AWS::Glue::Database
+    Properties:
+      DatabaseInput:
+        Name: !Ref DbName
+        Description: "glue for athena"
+      CatalogId: !Ref AWS::AccountId
+  Table1:
+    Type: AWS::Glue::Table
+    Properties:
+      DatabaseName: !Ref AthenaDb
+      CatalogId: !Ref AWS::AccountId
+      TableInput:
+        Name: !Select [ 0, !Ref TableList ]
+        TableType: EXTERNAL_TABLE
+        PartitionKeys:
+          - Name: logyear
+            Type: string
+          - Name: logmonth
+            Type: string
+          - Name: logday
+            Type: string
+        Parameters:
+          EXTERNAL: True
+          skip.header.line.count: 1
+        StorageDescriptor:
+          Columns:
+            - Name: date
+              Type: date
+            - Name: time
+              Type: string
+            - Name: timetaken
+              Type: string
+            - Name: clientip
+              Type: string
+            - Name: filesize
+              Type: string
+            - Name: edgecastip
+              Type: string
+            - Name: edgecastport
+              Type: string
+            - Name: cachestatus
+              Type: string
+            - Name: httpstatus
+              Type: string
+            - Name: sendbytes
+              Type: string
+            - Name: httpmethod
+              Type: string
+            - Name: requesturl
+              Type: string
+            - Name: originduration
+              Type: string
+            - Name: remoteserversendbytes
+              Type: string
+            - Name: referrer
+              Type: string
+            - Name: useragent
+              Type: string
+            - Name: customerid
+              Type: string
+            - Name: xeccustom1
+              Type: string
+          Location: 
+            Fn::Join:
+              - ''
+              - - 's3://'
+                - Fn::ImportValue: "CdnLogS3Path"
+                - '/'
+                - !Select [ 0, !Ref TableList ]
+                - !Ref PathSuffix
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          Compressed: false
+          NumberOfBuckets: -1
+          SerdeInfo:
+            SerializationLibrary: org.apache.hadoop.hive.serde2.RegexSerDe
+            Parameters:
+              input.regex: "([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*)/([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) - ([^ ]*) ([^ ]*) (\"[^\"]*\") (\"[^\"]*\") ([^ ]*) (\"[^\"]*\")$"
+              serialization.format: 1
+          BucketColumns: []
+          SortColumns: []
+          Parameters: {}
+          SkewedInfo:
+            SkewedColumnNames: []
+            SkewedColumnValues: []
+            SkewedColumnValueLocationMaps: {}
+          StoredAsSubDirectories: false
+  Table2:
+    Type: AWS::Glue::Table
+    Properties:
+      DatabaseName: !Ref AthenaDb
+      CatalogId: !Ref AWS::AccountId
+      TableInput:
+        Name: !Select [ 1, !Ref TableList ]
+        TableType: EXTERNAL_TABLE
+        PartitionKeys:
+          - Name: logyear
+            Type: string
+          - Name: logmonth
+            Type: string
+          - Name: logday
+            Type: string
+        Parameters:
+          EXTERNAL: True
+          skip.header.line.count: 1
+        StorageDescriptor:
+          Columns:
+            - Name: date
+              Type: date
+            - Name: time
+              Type: string
+            - Name: timetaken
+              Type: string
+            - Name: clientip
+              Type: string
+            - Name: filesize
+              Type: string
+            - Name: edgecastip
+              Type: string
+            - Name: edgecastport
+              Type: string
+            - Name: cachestatus
+              Type: string
+            - Name: httpstatus
+              Type: string
+            - Name: sendbytes
+              Type: string
+            - Name: httpmethod
+              Type: string
+            - Name: requesturl
+              Type: string
+            - Name: originduration
+              Type: string
+            - Name: remoteserversendbytes
+              Type: string
+            - Name: referrer
+              Type: string
+            - Name: useragent
+              Type: string
+            - Name: customerid
+              Type: string
+            - Name: xeccustom1
+              Type: string
+          Location: 
+            Fn::Join:
+              - ''
+              - - 's3://'
+                - Fn::ImportValue: "CdnLogS3Path"
+                - '/'
+                - !Select [ 1, !Ref TableList ]
+                - !Ref PathSuffix
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          Compressed: false
+          NumberOfBuckets: -1
+          SerdeInfo:
+            SerializationLibrary: org.apache.hadoop.hive.serde2.RegexSerDe
+            Parameters:
+              input.regex: "([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*)/([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) - ([^ ]*) ([^ ]*) (\"[^\"]*\") (\"[^\"]*\") ([^ ]*) (\"[^\"]*\")$"
+              serialization.format: 1
+          BucketColumns: []
+          SortColumns: []
+          Parameters: {}
+          SkewedInfo:
+            SkewedColumnNames: []
+            SkewedColumnValues: []
+            SkewedColumnValueLocationMaps: {}
+          StoredAsSubDirectories: false
+  Table3:
+    Type: AWS::Glue::Table
+    Properties:
+      DatabaseName: !Ref AthenaDb
+      CatalogId: !Ref AWS::AccountId
+      TableInput:
+        Name: !Select [ 2, !Ref TableList ]
+        TableType: EXTERNAL_TABLE
+        PartitionKeys:
+          - Name: logyear
+            Type: string
+          - Name: logmonth
+            Type: string
+          - Name: logday
+            Type: string
+        Parameters:
+          EXTERNAL: True
+          skip.header.line.count: 1
+        StorageDescriptor:
+          Columns:
+            - Name: date
+              Type: date
+            - Name: time
+              Type: string
+            - Name: timetaken
+              Type: string
+            - Name: clientip
+              Type: string
+            - Name: filesize
+              Type: string
+            - Name: edgecastip
+              Type: string
+            - Name: edgecastport
+              Type: string
+            - Name: cachestatus
+              Type: string
+            - Name: httpstatus
+              Type: string
+            - Name: sendbytes
+              Type: string
+            - Name: httpmethod
+              Type: string
+            - Name: requesturl
+              Type: string
+            - Name: originduration
+              Type: string
+            - Name: remoteserversendbytes
+              Type: string
+            - Name: referrer
+              Type: string
+            - Name: useragent
+              Type: string
+            - Name: customerid
+              Type: string
+            - Name: xeccustom1
+              Type: string
+          Location: 
+            Fn::Join:
+              - ''
+              - - 's3://'
+                - Fn::ImportValue: "CdnLogS3Path"
+                - '/'
+                - !Select [ 2, !Ref TableList ]
+                - !Ref PathSuffix
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          Compressed: false
+          NumberOfBuckets: -1
+          SerdeInfo:
+            SerializationLibrary: org.apache.hadoop.hive.serde2.RegexSerDe
+            Parameters:
+              input.regex: "([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*)/([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) - ([^ ]*) ([^ ]*) (\"[^\"]*\") (\"[^\"]*\") ([^ ]*) (\"[^\"]*\")$"
+              serialization.format: 1
+          BucketColumns: []
+          SortColumns: []
+          Parameters: {}
+          SkewedInfo:
+            SkewedColumnNames: []
+            SkewedColumnValues: []
+            SkewedColumnValueLocationMaps: {}
+          StoredAsSubDirectories: false
+  Table4:
+    Type: AWS::Glue::Table
+    Properties:
+      DatabaseName: !Ref AthenaDb
+      CatalogId: !Ref AWS::AccountId
+      TableInput:
+        Name: !Select [ 3, !Ref TableList ]
+        TableType: EXTERNAL_TABLE
+        PartitionKeys:
+          - Name: logyear
+            Type: string
+          - Name: logmonth
+            Type: string
+          - Name: logday
+            Type: string
+        Parameters:
+          EXTERNAL: True
+          skip.header.line.count: 1
+        StorageDescriptor:
+          Columns:
+            - Name: date
+              Type: date
+            - Name: time
+              Type: string
+            - Name: timetaken
+              Type: string
+            - Name: clientip
+              Type: string
+            - Name: filesize
+              Type: string
+            - Name: edgecastip
+              Type: string
+            - Name: edgecastport
+              Type: string
+            - Name: cachestatus
+              Type: string
+            - Name: httpstatus
+              Type: string
+            - Name: sendbytes
+              Type: string
+            - Name: httpmethod
+              Type: string
+            - Name: requesturl
+              Type: string
+            - Name: originduration
+              Type: string
+            - Name: remoteserversendbytes
+              Type: string
+            - Name: referrer
+              Type: string
+            - Name: useragent
+              Type: string
+            - Name: customerid
+              Type: string
+            - Name: xeccustom1
+              Type: string
+          Location: 
+            Fn::Join:
+              - ''
+              - - 's3://'
+                - Fn::ImportValue: "CdnLogS3Path"
+                - '/'
+                - !Select [ 3, !Ref TableList ]
+                - !Ref PathSuffix
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          Compressed: false
+          NumberOfBuckets: -1
+          SerdeInfo:
+            SerializationLibrary: org.apache.hadoop.hive.serde2.RegexSerDe
+            Parameters:
+              input.regex: "([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*)/([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) - ([^ ]*) ([^ ]*) (\"[^\"]*\") (\"[^\"]*\") ([^ ]*) (\"[^\"]*\")$"
+              serialization.format: 1
+          BucketColumns: []
+          SortColumns: []
+          Parameters: {}
+          SkewedInfo:
+            SkewedColumnNames: []
+            SkewedColumnValues: []
+            SkewedColumnValueLocationMaps: {}
+          StoredAsSubDirectories: false
+  Table5:
+    Type: AWS::Glue::Table
+    Properties:
+      DatabaseName: !Ref AthenaDb
+      CatalogId: !Ref AWS::AccountId
+      TableInput:
+        Name: !Select [ 4, !Ref TableList ]
+        TableType: EXTERNAL_TABLE
+        PartitionKeys:
+          - Name: logyear
+            Type: string
+          - Name: logmonth
+            Type: string
+          - Name: logday
+            Type: string
+        Parameters:
+          EXTERNAL: True
+          skip.header.line.count: 1
+        StorageDescriptor:
+          Columns:
+            - Name: date
+              Type: date
+            - Name: time
+              Type: string
+            - Name: timetaken
+              Type: string
+            - Name: clientip
+              Type: string
+            - Name: filesize
+              Type: string
+            - Name: edgecastip
+              Type: string
+            - Name: edgecastport
+              Type: string
+            - Name: cachestatus
+              Type: string
+            - Name: httpstatus
+              Type: string
+            - Name: sendbytes
+              Type: string
+            - Name: httpmethod
+              Type: string
+            - Name: requesturl
+              Type: string
+            - Name: originduration
+              Type: string
+            - Name: remoteserversendbytes
+              Type: string
+            - Name: referrer
+              Type: string
+            - Name: useragent
+              Type: string
+            - Name: customerid
+              Type: string
+            - Name: xeccustom1
+              Type: string
+          Location: 
+            Fn::Join:
+              - ''
+              - - 's3://'
+                - Fn::ImportValue: "CdnLogS3Path"
+                - '/'
+                - !Select [ 4, !Ref TableList ]
+                - !Ref PathSuffix
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          Compressed: false
+          NumberOfBuckets: -1
+          SerdeInfo:
+            SerializationLibrary: org.apache.hadoop.hive.serde2.RegexSerDe
+            Parameters:
+              input.regex: "([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*)/([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) - ([^ ]*) ([^ ]*) (\"[^\"]*\") (\"[^\"]*\") ([^ ]*) (\"[^\"]*\")$"
+              serialization.format: 1
+          BucketColumns: []
+          SortColumns: []
+          Parameters: {}
+          SkewedInfo:
+            SkewedColumnNames: []
+            SkewedColumnValues: []
+            SkewedColumnValueLocationMaps: {}
+          StoredAsSubDirectories: false
+Outputs:
+  AthenaName:
+    Description: Athena name for reference
+    Value: !Ref AthenaDb
+    Export:
+      Name: CdnAthenaName
+AWSTemplateFormatVersion: 2010-09-09

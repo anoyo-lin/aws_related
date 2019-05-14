@@ -1,0 +1,159 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Template of create an S3 bucket for cdn log trasnfer and GDPR processed!
+Parameters:
+    BucketName:
+        Description: bucket name
+        Type: String
+        Default: cdn-log-project
+
+Resources:
+    Bucket:
+        Description: repository bucket
+        Type: AWS::S3::Bucket
+        Properties:
+            BucketName: !Ref BucketName
+    LambdaCfnPolicy:
+        Type: AWS::IAM::Policy
+        DependsOn:
+            - LambdaCfnRole
+        Properties:
+            PolicyName: LambdaCfnPolicy
+            Roles:
+                - Ref: LambdaCfnRole
+            PolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                    - 
+                        Effect: "Allow"
+                        Action:
+                            - "logs:*"
+                        Resource: 
+                            - "arn:aws:logs:*:*:*"
+                    - 
+                        Effect: "Allow"
+                        Action:
+                            - "s3:*"
+                        Resource:
+                            - !Sub "arn:aws:s3:::${BucketName}"
+                            - !Sub "arn:aws:s3:::${BucketName}/*"
+    LambdaCfnRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: LambdaCfnRole
+            AssumeRolePolicyDocument:
+                Version: "2012-10-17"
+                Statement:
+                    -
+                        Effect: "Allow"
+                        Principal:
+                            Service:
+                                - "lambda.amazonaws.com"
+                        Action:
+                            - "sts:AssumeRole"
+            Path: "/"
+    ClearBucketLambda:
+        Type: AWS::Lambda::Function
+        DependsOn:
+            - LambdaCfnRole
+            - LambdaCfnPolicy
+        Properties:
+            FunctionName: "cfn_clear_bucket"
+            Description: "clear bucket function for cloudformation"
+            Handler: "index.lambda_handler"
+            MemorySize: 128
+            Runtime: "python3.6"
+            Timeout: 300
+            Role: !GetAtt LambdaCfnRole.Arn
+            Code:
+                ZipFile: !Sub |
+                    import boto3
+                    import cfnresponse
+                    import signal
+                    import time
+                    from botocore.exceptions import ClientError
+                    def send_response(cfn_response, status):
+                        time.sleep(5)
+                        if status == 'SUCCESS':
+                            cfnresponse.send(cfn_response['event'], cfn_response['context'], cfnresponse.SUCCESS, cfn_response['data'])
+                        else:
+                            cfnresponse.send(cfn_response['event'], cfn_response['context'], cfnresponse.FAILED, cfn_response['data'])
+
+                    def lambda_handler(event, context):
+                        cfn_response = {}
+                        cfn_response['event'] = event
+                        cfn_response['context'] = context
+                        cfn_response['data'] = { 'Data': event['ResourceProperties']['ServiceToken'] }
+
+                        if event['RequestType'] == 'Delete':
+                            session = boto3.Session()
+                            s3_client = session.client('s3')
+                            try:
+                                signal.signal(signal.SIGALRM, timeout_handler)
+                                signal.alarm(270)
+                                clear_bucket(s3_client, event['ResourceProperties']['S3BucketName'], cfn_response)
+                                signal.alarm(0)
+                            except Exception as e:
+                                print (e)
+                                send_response(cfn_response, 'FAILED')
+                        else:
+                            print("Handle Create/Update Event")
+                            send_response(cfn_response, 'SUCCESS')
+
+                    def timeout_handler(signum, frame):
+                        raise Exception('timeout already')
+
+                    def delete_object(s3_client, bucket, key_list, cfn_response):
+                        try:
+                            s3_client.delete_objects(
+                                Bucket = bucket,
+                                Delete={
+                                    'Objects': key_list,
+                                    'Quiet': False
+                                    }
+                                )
+                            print ('Delete Object {}'.format(key_list))
+                        except ClientError as e:
+                            print ('Unexpected Error: {}'.format(e))
+                            send_response(cfn_response, 'FAILED')
+                    def delete_bucket(s3_client, bucket, cfn_response):
+                        try:
+                            s3_client.delete_bucket(
+                                Bucket = bucket
+                                )
+                            send_response(cfn_response, 'SUCCESS')
+                        except ClientError as e:
+                            print ('Unexpected Error: {}'.format(e))
+                            send_response(cfn_response, 'FAILED')
+                    def clear_bucket(s3_client, bucket, cfn_response):
+                        try:
+                            resp = s3_client.list_objects_v2(
+                                Bucket = bucket
+                                )
+                            print (resp)
+                        except ClientError as e:
+                            print ('Unexpected Error: {}'.format(e))
+                            send_response(cfn_response, 'FAILED')
+                        if 'Contents' not in resp:
+                            delete_bucket(s3_client, bucket, cfn_response)
+                        else:
+                            key_list = []
+                            for content in resp['Contents']:
+                                key_list.append(
+                                    {'Key': content['Key']}
+                                    )
+                            delete_object(s3_client, bucket, key_list, cfn_response)
+                            delete_bucket(s3_client, bucket, cfn_response)
+    ClearBucketAction:
+        Type: Custom::ClearBucketAction
+        DependsOn: Bucket
+        Properties:
+            ServiceToken: !GetAtt ClearBucketLambda.Arn
+            Region: !Ref "AWS::Region"
+            S3BucketName: !Ref BucketName
+Outputs:
+    BucketPath:
+        Description: http url of bucket 
+        Value: !Ref BucketName
+        Export:
+            Name: CdnLogS3Path
+AWSTemplateFormatVersion: 2010-09-09
